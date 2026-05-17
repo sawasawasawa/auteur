@@ -8,6 +8,7 @@ out/
 .DS_Store
 /public/renders/
 /public/uploads/
+/public/audio/
 /.tmp-auteur/
 /tmp/
 
