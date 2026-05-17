@@ -6,6 +6,7 @@ import {
   useVideoConfig,
   interpolate,
   spring,
+  staticFile,
 } from "remotion";
 import React from "react";
 
@@ -30,6 +31,12 @@ const PALETTES = [
   { bg: "#0e1a2b", ink: "#fafaf9", pop: "#3a86ff" },
 ];
 
+function resolveAudio(src: string): string {
+  if (/^https?:\/\//.test(src)) return src;
+  if (src.startsWith("/")) return src; // absolute web path under public/
+  return staticFile(src);
+}
+
 export const Short: React.FC<ShortProps> = ({ audioSrc, durationSec, hook, beats, brand }) => {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -46,7 +53,7 @@ export const Short: React.FC<ShortProps> = ({ audioSrc, durationSec, hook, beats
         fontFamily: "Inter, ui-sans-serif",
       }}
     >
-      {audioSrc ? <Audio src={audioSrc} /> : null}
+      {audioSrc ? <Audio src={resolveAudio(audioSrc)} /> : null}
 
       {/* Hook (first 1.8s) */}
       <Sequence from={0} durationInFrames={Math.round(1.8 * fps)}>

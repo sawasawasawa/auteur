@@ -26,10 +26,18 @@ export async function infer(
     child.stderr.on("data", (b) => (err += b.toString()));
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code === 0) resolve(out.trim());
+      if (code === 0) resolve(sanitize(out.trim()));
       else reject(new Error(`Inference exited ${code}: ${err || out}`));
     });
   });
+}
+
+// Strip em-dashes and en-dashes from model output before it ever touches UI.
+// They break Mateusz's typographic preference and look out of place in burned-in captions.
+function sanitize(s: string): string {
+  return s
+    .replace(/—/g, ", ")  // em-dash to comma-space
+    .replace(/–/g, " - "); // en-dash to space-hyphen-space
 }
 
 export async function inferJson<T = unknown>(

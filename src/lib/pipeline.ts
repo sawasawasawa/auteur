@@ -8,7 +8,6 @@ import { transcribe } from "@/lib/whisper";
 import { inferJson } from "@/lib/inference";
 import { CutPlanSchema } from "@/lib/schemas";
 import { cutAndConcat } from "@/lib/ffmpeg";
-import { renderShort } from "@/lib/remotionRender";
 
 const CUT_SYSTEM = `You are a top-tier short-form editor. You receive:
 - A creator concept (title, hook, angle)
@@ -80,13 +79,19 @@ export async function processSession(sessionId: string): Promise<void> {
   });
   const totalDur = cursor;
 
-  // Render
+  // Render (dynamic import to keep Remotion out of dev route bundle)
   setPhase(sessionId, "rendering");
   const outDir = path.join(process.cwd(), "public", "renders");
   await fs.mkdir(outDir, { recursive: true });
+  const audioPublicDir = path.join(process.cwd(), "public", "audio");
+  await fs.mkdir(audioPublicDir, { recursive: true });
+  const audioPublicPath = path.join(audioPublicDir, `${sessionId}.m4a`);
+  await fs.copyFile(cutAudio, audioPublicPath);
+
   const outPath = path.join(outDir, `${sessionId}.mp4`);
+  const { renderShort } = await import("@/lib/remotionRender");
   await renderShort({
-    audioPath: cutAudio,
+    audioPath: `audio/${sessionId}.m4a`,
     durationSec: totalDur,
     hook: cutPlan.hook.toUpperCase(),
     beats: stagedBeats,

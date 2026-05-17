@@ -12,6 +12,7 @@ async function getBundle(): Promise<string> {
   const entry = path.join(process.cwd(), "src/remotion/index.ts");
   bundleCache = await bundle({
     entryPoint: entry,
+    publicDir: path.join(process.cwd(), "public"),
     onProgress: () => void 0,
     webpackOverride: (c) => c,
   });

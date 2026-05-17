@@ -48,7 +48,11 @@ export interface Session {
   error?: string;
 }
 
-const SESSIONS = new Map<string, Session>();
+// Persist across Next.js dev HMR reloads + route handler module instances.
+const GLOBAL_KEY = "__AUTEUR_SESSIONS__";
+const g = globalThis as any;
+if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = new Map<string, Session>();
+const SESSIONS: Map<string, Session> = g[GLOBAL_KEY];
 
 export function createSession(niche: string, vibe?: string): Session {
   const id = randomUUID();

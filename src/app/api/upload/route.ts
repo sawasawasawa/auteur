@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { getSession, setPhase } from "@/lib/sessions";
+import { getSession, setPhase, setError } from "@/lib/sessions";
 import { processSession } from "@/lib/pipeline";
 
 export const runtime = "nodejs";
@@ -21,13 +21,12 @@ export async function POST(req: NextRequest) {
   const tmpDir = path.join(process.cwd(), ".tmp-auteur", sessionId);
   await fs.mkdir(tmpDir, { recursive: true });
 
-  const ext = (file as any).type?.includes("webm") ? "webm" : "wav";
-  const rawPath = path.join(tmpDir, `raw.${ext}`);
+  const rawPath = path.join(tmpDir, "raw.input");
   const buf = Buffer.from(await file.arrayBuffer());
   await fs.writeFile(rawPath, buf);
 
   // Convert to 16k mono wav for whisper-cli.
-  const wavPath = path.join(tmpDir, "raw.wav");
+  const wavPath = path.join(tmpDir, "processed.wav");
   await new Promise<void>((resolve, reject) => {
     const child = spawn("ffmpeg", [
       "-y", "-i", rawPath, "-ac", "1", "-ar", "16000", wavPath,
@@ -42,7 +41,8 @@ export async function POST(req: NextRequest) {
 
   // Fire the pipeline; do not await.
   processSession(sessionId).catch((err) => {
-    setPhase(sessionId, "error", String(err?.message || err));
+    console.error("[auteur] pipeline failed for", sessionId, err);
+    setError(sessionId, String(err?.stack || err?.message || err));
   });
 
   return NextResponse.json({ ok: true });
