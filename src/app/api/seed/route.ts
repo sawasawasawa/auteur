@@ -48,12 +48,77 @@ export async function POST(req: NextRequest) {
 
   const user = `Creator description:\n${niche}\n\n${vibe ? `Vibe / tone: ${vibe}\n` : ""}Output STRICT JSON only.`;
 
-  try {
-    const raw = await inferJson<unknown>(SYSTEM, user, { level: "standard", timeoutMs: 60_000 });
-    const data = ConceptsResponse.parse(raw);
-    session.concepts = data.concepts.map((c, i) => ({ ...c, id: c.id || `c${i + 1}` }));
-    return NextResponse.json({ sessionId: session.id, concepts: session.concepts });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Inference failed" }, { status: 500 });
+  // Try fast (Haiku) first for snappy demo. Fall back to standard if it dies, then a static template.
+  const attempts: { level: "fast" | "standard"; timeoutMs: number }[] = [
+    { level: "fast", timeoutMs: 45_000 },
+    { level: "standard", timeoutMs: 90_000 },
+  ];
+  let lastErr: any = null;
+  for (const a of attempts) {
+    try {
+      const raw = await inferJson<unknown>(SYSTEM, user, a);
+      const data = ConceptsResponse.parse(raw);
+      session.concepts = data.concepts.map((c, i) => ({ ...c, id: c.id || `c${i + 1}` }));
+      return NextResponse.json({ sessionId: session.id, concepts: session.concepts });
+    } catch (err: any) {
+      lastErr = err;
+      console.error(`[seed] ${a.level} attempt failed:`, err?.message);
+    }
   }
+  // Static fallback so the demo never hard-fails.
+  session.concepts = staticConcepts(niche);
+  return NextResponse.json({
+    sessionId: session.id,
+    concepts: session.concepts,
+    fallback: true,
+    warning: lastErr?.message?.slice(0, 200),
+  });
+}
+
+function staticConcepts(niche: string) {
+  const tag = niche.split(/[.,\n]/)[0].slice(0, 80);
+  return [
+    {
+      id: "c1",
+      title: "The Mistake Everyone Makes",
+      hook: `Most ${tag} get this completely backwards.`,
+      angle: "contrarian",
+      format: "talking head",
+      why: "Contrarian opener forces a stop-and-listen reaction in the first second.",
+      questions: [
+        "What is the single biggest myth in your world that you wish people would stop repeating?",
+        "Tell me about the moment you realized you had been wrong about something important.",
+        "What does almost nobody get right that you see clearly?",
+        "If a beginner asked you for one rule to live by here, what would it be?",
+      ],
+    },
+    {
+      id: "c2",
+      title: "The Day That Changed Everything",
+      hook: "One moment changed how I do this forever.",
+      angle: "story",
+      format: "talking head",
+      why: "Story openers hijack the reader's narrative reflex, keeps them watching to the resolution.",
+      questions: [
+        "Walk me through a specific day or moment that completely rewired how you think.",
+        "What were you doing before that moment that you would never go back to?",
+        "What did the people around you not understand at the time?",
+        "What would you tell yourself the day before that moment happened?",
+      ],
+    },
+    {
+      id: "c3",
+      title: "The Tactic Nobody Uses",
+      hook: "I use one tiny trick that nobody else does.",
+      angle: "how-to",
+      format: "talking head",
+      why: "Hyper-specific tactical promise creates a save-and-share urgency.",
+      questions: [
+        "What is something you do every single day that you have never explained to anyone?",
+        "What is the smallest possible action that gives you the biggest payoff?",
+        "Walk me through that tactic step by step.",
+        "What stops most people from trying this for themselves?",
+      ],
+    },
+  ];
 }
