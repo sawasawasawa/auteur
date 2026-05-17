@@ -54,9 +54,12 @@ export default function SeedPage() {
         className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber/60 mb-8"
       />
 
-      <button onClick={go} disabled={loading || niche.trim().length < 6} className="btn">
-        {loading ? "Generating concepts..." : "Generate 3 concepts"}
-      </button>
+      <div className="flex items-center gap-4 flex-wrap">
+        <button onClick={go} disabled={loading || niche.trim().length < 6} className="btn">
+          {loading ? "Generating concepts..." : "Generate 3 concepts"}
+        </button>
+        <a href="/demo" className="btn btn-ghost">Watch a sample</a>
+      </div>
 
       {err ? <p className="text-flame mt-4 text-sm">{err}</p> : null}
 
