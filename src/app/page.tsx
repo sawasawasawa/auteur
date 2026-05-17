@@ -11,17 +11,30 @@ export default function SeedPage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function go() {
-    if (!niche.trim()) return;
+    const trimmed = niche.trim();
+    if (trimmed.length < 6) {
+      setErr("Please describe yourself in at least 6 characters.");
+      return;
+    }
     setLoading(true);
     setErr(null);
     try {
       const res = await fetch("/api/seed", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ niche: niche.trim(), vibe: vibe.trim() || undefined, useFalBroll }),
+        body: JSON.stringify({ niche: trimmed, vibe: vibe.trim() || undefined, useFalBroll }),
       });
-      if (!res.ok) throw new Error((await res.json()).error?.message || "seed failed");
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const fieldErr = data?.error?.fieldErrors;
+        const formErr = data?.error?.formErrors;
+        const msg = data?.error?.message
+          || (fieldErr && Object.entries(fieldErr).map(([k, v]) => `${k}: ${(v as string[]).join(", ")}`).join("; "))
+          || (Array.isArray(formErr) && formErr.length ? formErr.join("; ") : null)
+          || (typeof data?.error === "string" ? data.error : null)
+          || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
       router.push(`/concepts?s=${data.sessionId}`);
     } catch (e: any) {
       setErr(e.message || String(e));
