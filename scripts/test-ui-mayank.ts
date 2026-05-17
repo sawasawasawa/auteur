@@ -1,0 +1,20 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch({ headless: true });
+const page = await (await browser.newContext()).newPage();
+const seedResp = page.waitForResponse(r => r.url().endsWith("/api/seed") && r.request().method() === "POST", { timeout: 90_000 });
+
+await page.goto("http://localhost:3737/", { waitUntil: "networkidle" });
+await page.waitForSelector("textarea");
+const ta = page.locator("textarea");
+console.log("default niche length:", (await ta.inputValue()).length);
+const btn = page.locator("button:has-text('Generate 3 concepts')");
+console.log("button disabled?", await btn.evaluate((el: HTMLButtonElement) => el.disabled));
+await btn.click();
+const resp = await seedResp;
+console.log("status:", resp.status());
+console.log("body head:", (await resp.text()).slice(0, 300));
+await page.waitForTimeout(800);
+console.log("after url:", page.url());
+const errCount = await page.locator(".text-flame").count();
+console.log("UI error:", errCount ? await page.locator(".text-flame").first().textContent() : "(none)");
+await browser.close();

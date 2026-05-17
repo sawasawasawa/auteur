@@ -8,8 +8,8 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const Body = z.object({
-  niche: z.string().min(2).max(280),
-  vibe: z.string().max(120).optional(),
+  niche: z.string().min(6).max(4000),
+  vibe: z.string().max(500).optional(),
   useFalBroll: z.boolean().optional(),
 });
 

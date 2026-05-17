@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const DEFAULT_NICHE = `Hello, my name is Mayank. I am a software developer by profession. I like going to the gym. I like ABGs and software development. My domain has been web3 for the last four or five years, and for the last one and a half to two years I have been deep diving into AI: how to use the tools, and the agent side, RAGs, context engineering, harness engineering, all of it.`;
+
 export default function SeedPage() {
   const router = useRouter();
-  const [niche, setNiche] = useState("");
+  const [niche, setNiche] = useState(DEFAULT_NICHE);
   const [vibe, setVibe] = useState("");
   const [useFalBroll, setUseFalBroll] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,14 +53,18 @@ export default function SeedPage() {
         Tell Auteur who you are. It writes three video concepts, interviews you, picks the best 30 seconds, and ships a finished vertical short.
       </p>
 
-      <label className="block text-sm uppercase tracking-widest text-white/40 mb-2">Who are you?</label>
+      <label className="block text-sm uppercase tracking-widest text-white/40 mb-2 flex justify-between">
+        <span>Who are you?</span>
+        <button type="button" onClick={() => setNiche("")} className="text-white/40 hover:text-white/70 normal-case tracking-normal">Clear</button>
+      </label>
       <textarea
         value={niche}
         onChange={(e) => setNiche(e.target.value)}
         placeholder="e.g. Solo founder building a fitness app for retired endurance athletes. Spent 12 years coaching D1 swimmers. Hate the word wellness."
-        rows={4}
-        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber/60 focus:bg-white/8 mb-6 resize-none"
+        rows={6}
+        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber/60 focus:bg-white/8 mb-2 resize-y"
       />
+      <div className="text-xs text-white/30 mb-6">{niche.length} / 4000 characters</div>
 
       <label className="block text-sm uppercase tracking-widest text-white/40 mb-2">Vibe (optional)</label>
       <input
