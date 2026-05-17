@@ -7,6 +7,7 @@ const PHASES = [
   { key: "transcribing", label: "Transcribing" },
   { key: "transcribed", label: "Transcript ready" },
   { key: "cutting", label: "AI cut decisions" },
+  { key: "broll", label: "Generating fal.ai B-roll" },
   { key: "rendering", label: "Rendering 9:16" },
   { key: "done", label: "Done" },
 ];

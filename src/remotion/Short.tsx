@@ -1,6 +1,7 @@
 import {
   AbsoluteFill,
   Audio,
+  OffthreadVideo,
   Sequence,
   useCurrentFrame,
   useVideoConfig,
@@ -15,6 +16,7 @@ export interface Beat {
   end: number;
   text: string;
   overlay?: string;
+  broll?: string;
 }
 
 export interface ShortProps {
@@ -60,12 +62,27 @@ export const Short: React.FC<ShortProps> = ({ audioSrc, durationSec, hook, beats
         <HookBlock text={hook} pop={palette.pop} ink={palette.ink} />
       </Sequence>
 
+      {/* B-roll (if generated) plays beneath captions for the duration of each beat */}
+      {beats.map((b, i) => {
+        if (!b.broll) return null;
+        const from = Math.round(b.start * fps);
+        const dur = Math.max(6, Math.round((b.end - b.start) * fps));
+        return (
+          <Sequence key={`v-${i}`} from={from} durationInFrames={dur}>
+            <AbsoluteFill style={{ opacity: 0.6 }}>
+              <OffthreadVideo src={resolveAudio(b.broll)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.55) 100%)" }} />
+            </AbsoluteFill>
+          </Sequence>
+        );
+      })}
+
       {/* Captions per beat */}
       {beats.map((b, i) => {
         const from = Math.round(b.start * fps);
         const dur = Math.max(6, Math.round((b.end - b.start) * fps));
         return (
-          <Sequence key={i} from={from} durationInFrames={dur}>
+          <Sequence key={`c-${i}`} from={from} durationInFrames={dur}>
             <CaptionBlock text={b.text} overlay={b.overlay} pop={palette.pop} ink={palette.ink} />
           </Sequence>
         );

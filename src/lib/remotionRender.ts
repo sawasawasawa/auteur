@@ -23,7 +23,7 @@ export interface RenderInput {
   audioPath: string;       // path to the cut audio
   durationSec: number;
   hook: string;
-  beats: { start: number; end: number; text: string; overlay?: string }[];
+  beats: { start: number; end: number; text: string; overlay?: string; broll?: string }[];
   brand?: string;
   outPath: string;         // mp4 output
 }

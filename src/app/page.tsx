@@ -6,6 +6,7 @@ export default function SeedPage() {
   const router = useRouter();
   const [niche, setNiche] = useState("");
   const [vibe, setVibe] = useState("");
+  const [useFalBroll, setUseFalBroll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -17,7 +18,7 @@ export default function SeedPage() {
       const res = await fetch("/api/seed", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ niche: niche.trim(), vibe: vibe.trim() || undefined }),
+        body: JSON.stringify({ niche: niche.trim(), vibe: vibe.trim() || undefined, useFalBroll }),
       });
       if (!res.ok) throw new Error((await res.json()).error?.message || "seed failed");
       const data = await res.json();
@@ -51,8 +52,21 @@ export default function SeedPage() {
         value={vibe}
         onChange={(e) => setVibe(e.target.value)}
         placeholder="dry, direct, no fluff"
-        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber/60 mb-8"
+        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber/60 mb-6"
       />
+
+      <label className="flex items-center gap-3 mb-8 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={useFalBroll}
+          onChange={(e) => setUseFalBroll(e.target.checked)}
+          className="h-5 w-5 accent-amber"
+        />
+        <span className="text-sm text-white/80">
+          Generate AI B-roll with fal.ai{" "}
+          <span className="text-white/40">(adds about 60 seconds, costs about $0.50 in fal credits)</span>
+        </span>
+      </label>
 
       <div className="flex items-center gap-4 flex-wrap">
         <button onClick={go} disabled={loading || niche.trim().length < 6} className="btn">

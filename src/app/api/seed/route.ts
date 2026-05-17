@@ -10,6 +10,7 @@ export const maxDuration = 60;
 const Body = z.object({
   niche: z.string().min(2).max(280),
   vibe: z.string().max(120).optional(),
+  useFalBroll: z.boolean().optional(),
 });
 
 const SYSTEM = `You are a senior short-form content strategist who has produced viral 9:16 shorts for first-time creators.
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { niche, vibe } = parsed.data;
-  const session = createSession(niche, vibe);
+  const { niche, vibe, useFalBroll } = parsed.data;
+  const session = createSession(niche, vibe, useFalBroll);
 
   const user = `Creator description:\n${niche}\n\n${vibe ? `Vibe / tone: ${vibe}\n` : ""}Output STRICT JSON only.`;
 

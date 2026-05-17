@@ -79,6 +79,23 @@ export async function processSession(sessionId: string): Promise<void> {
   });
   const totalDur = cursor;
 
+  // Optional fal.ai B-roll generation
+  if (s.useFalBroll) {
+    setPhase(sessionId, "broll", `${stagedBeats.length} clips`);
+    const { generateBroll, brollPromptFor } = await import("@/lib/fal");
+    s.brollPaths = [];
+    // Generate in parallel — fal.subscribe handles its own queueing.
+    const results = await Promise.allSettled(
+      stagedBeats.map((b, i) =>
+        generateBroll(sessionId, i, {
+          prompt: brollPromptFor(b.text, cutPlan.hook),
+          durationSec: Math.max(2, Math.ceil(b.end - b.start)),
+        })
+      )
+    );
+    s.brollPaths = results.map((r) => (r.status === "fulfilled" ? r.value.publicPath : ""));
+  }
+
   // Render (dynamic import to keep Remotion out of dev route bundle)
   setPhase(sessionId, "rendering");
   const outDir = path.join(process.cwd(), "public", "renders");
@@ -94,7 +111,7 @@ export async function processSession(sessionId: string): Promise<void> {
     audioPath: `audio/${sessionId}.m4a`,
     durationSec: totalDur,
     hook: cutPlan.hook.toUpperCase(),
-    beats: stagedBeats,
+    beats: stagedBeats.map((b, i) => ({ ...b, broll: s.brollPaths?.[i] || undefined })),
     outPath,
     brand: "AUTEUR",
   });

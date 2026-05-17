@@ -11,6 +11,7 @@ export type Phase =
   | "transcribing"
   | "transcribed"
   | "cutting"
+  | "broll"
   | "rendering"
   | "done"
   | "error";
@@ -36,11 +37,13 @@ export interface Session {
   id: string;
   niche: string;
   vibe?: string;
+  useFalBroll?: boolean;
   concepts: Concept[];
   pickedConcept?: Concept;
   audioPath?: string;
   transcript?: { text: string; words: { word: string; start: number; end: number }[] };
   cutPlan?: { hook: string; beats: CutBeat[]; targetDurationSec: number };
+  brollPaths?: string[]; // public-relative paths, indexed by beat
   renderPath?: string;
   phase: Phase;
   phaseLog: { ts: number; phase: Phase; note?: string }[];
@@ -54,12 +57,13 @@ const g = globalThis as any;
 if (!g[GLOBAL_KEY]) g[GLOBAL_KEY] = new Map<string, Session>();
 const SESSIONS: Map<string, Session> = g[GLOBAL_KEY];
 
-export function createSession(niche: string, vibe?: string): Session {
+export function createSession(niche: string, vibe?: string, useFalBroll?: boolean): Session {
   const id = randomUUID();
   const s: Session = {
     id,
     niche,
     vibe,
+    useFalBroll,
     concepts: [],
     phase: "seeded",
     phaseLog: [{ ts: Date.now(), phase: "seeded" }],
